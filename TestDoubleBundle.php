@@ -10,12 +10,18 @@ use Prophecy\Prophet;
 
 final class TestDoubleBundle extends Bundle implements CompilerPassInterface
 {
+    /**
+     * @param ContainerBuilder $container
+     */
     public function build(ContainerBuilder $container)
     {
         $container->addCompilerPass($this);
     }
 
-    public function process(ContainerBuilder $container)
+    /**
+     * @param ContainerBuilder $container
+     */
+    public function process(ContainerBuilder $container): void
     {
         $ids = [];
         foreach ($container->findTaggedServiceIds('test_double') as $id => $configs) {
@@ -33,15 +39,12 @@ final class TestDoubleBundle extends Bundle implements CompilerPassInterface
 
                     $container->setAlias($id, "$id.stub");
 
-                    $class = $definition->getClass();
-                    if (isset($config['stub'])) {
-                        $class = $config['stub'];
-                    }
+                    $class = $config['stub'] ?? $definition->getClass();
                     $ids[$id] = $class;
                 }
             }
         }
-        $container->setDefinition('stub.prophet', (new Definition)->setSynthetic(true));
+        $container->setDefinition('stub.prophet', (new Definition)->setSynthetic(true)->setPublic(true));
         $container->setParameter('stub.services', $ids);
     }
 
